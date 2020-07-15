@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dialogflow/dialogflow_v2.dart';
 import 'package:intl/intl.dart';
 
+import 'messagestypes.dart';
+
 void main() => runApp(new MyApp());
 
 class MyApp extends StatelessWidget {
@@ -29,6 +31,7 @@ class HomePageDialogflow extends StatefulWidget {
 class _HomePageDialogflow extends State<HomePageDialogflow> {
   final List<ListItem> _messages = <ListItem>[];
   final TextEditingController _textController = new TextEditingController();
+  ScrollController _scrollController = new ScrollController();
   @override
   void initState() {
     super.initState();
@@ -69,31 +72,57 @@ class _HomePageDialogflow extends State<HomePageDialogflow> {
     Dialogflow dialogflow =
         Dialogflow(authGoogle: authGoogle, language: Language.english);
     AIResponse response = await dialogflow.detectIntent(query);
-    BotButtons chatButtons;
-    debugPrint(response.getMessage());
-    if(response.getListMessage().length>1)
-      {
-        List<dynamic> buttons=response.getListMessage()[1]['payload']["buttons"];
-        chatButtons=new BotButtons(buttons,_handleSubmitted);
-      }
+    debugPrint(response.queryResult.intent.displayName);
     DateTime date = DateTime.now();
     String dateFormat = DateFormat('E hh:mm').format(date);
-    BotTextMessage message = new BotTextMessage(
-      text: response.getMessage() ,
-      name: "Bot",
-      timeofday: dateFormat
-    );
-    setState(() {
-       if(chatButtons!=null)
-        {
-          _messages.insert(0, chatButtons);
-           _messages.insert(1, message);
-        }
-        else
-          {
-             _messages.insert(0, message);
+    if(response.queryResult.intent.displayName.compareTo("welcomefollowup")==0)
+      {
+         if(response.getListMessage()[1]['payload']["buttons"]!=null){
+           List<dynamic> buttons=response.getListMessage()[1]['payload']["buttons"];
+           BotButtons chatButtons=new BotButtons(buttons,_handleSubmitted);
+           _messages.insert(0,chatButtons);
           }
+        BotTextMessage message = new BotTextMessage(
+            text: response.getMessage() ,
+            name: "Bot",
+            timeofday: dateFormat
+           );
+            _messages.insert(1, message);
 
+      }
+    else if(response.queryResult.intent.displayName.compareTo("Who is Billy?")==0)
+      {
+         List<dynamic> buttons=response.getListMessage()[2]['payload']["buttons"];
+           BotButtons chatButtons=new BotButtons(buttons,_handleSubmitted);
+           _messages.insert(0,chatButtons);
+          BotTextMessage message2 = new BotTextMessage(
+            text: response.getListMessage()[1]['text']['text'][0] ,
+            name: "Bot",
+            timeofday: dateFormat
+           );
+            _messages.insert(1,message2);
+            String url=response.getListMessage()[2]['payload']['images'][0];
+            BotImageMessage imageMessage=new BotImageMessage(url:url);
+            _messages.insert(2, imageMessage);
+          BotTextMessage message = new BotTextMessage(
+            text: response.getListMessage()[0]['text']['text'][0] ,
+            name: "Bot",
+            timeofday: dateFormat
+           );
+            _messages.insert(3,message);
+
+      }
+    else
+      {
+         BotTextMessage message = new BotTextMessage(
+            text: response.getMessage() ,
+            name: "Bot",
+            timeofday: dateFormat
+           );
+         _messages.insert(0,message);
+      }
+    setState(() {
+      _messages;
     });
   }
 
@@ -105,8 +134,12 @@ class _HomePageDialogflow extends State<HomePageDialogflow> {
       message: text,
       timeofday:dateFormat
     );
+    if(_messages[0] is BotButtons)
+      {
+        _messages.removeAt(0);
+      }
     setState(() {
-      _messages.insert(0, message);
+      _messages.insert(0,message);
     });
     Response(text);
   }
@@ -160,129 +193,4 @@ class _HomePageDialogflow extends State<HomePageDialogflow> {
       ]),
     );
   }
-}
-abstract class ListItem{
-  Widget buildUsrTextMessge(BuildContext context);
-  Widget buildBotTextMessge(BuildContext context);
-  Widget buildBotImageMessge(BuildContext context);
-  Widget buildBotButtonMessge(BuildContext context);
-}
-class BotButtons implements ListItem{
-  List<dynamic> buttonstext;
-   var buttonWidget = List<Widget>();
-    BotButtons(buttonstext, void Function(String text) handleSubmitted){
-    this.buttonstext=buttonstext;
-    for (var buttontext in buttonstext) {
-      debugPrint(buttontext.toString());
-      buttonWidget.add(new OutlineButton(
-      child: new Text(buttontext.toString()),
-      onPressed: (){
-        handleSubmitted(buttontext.toString());
-      },
-      shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0))
-));
-    }
-  }
-
-
-
-  @override
-  Widget buildBotButtonMessge(BuildContext context) {
-    return new Container(
-        margin: const EdgeInsets.only(top: 5.0,bottom: 5,left: 50),
-    child:Column(children: buttonWidget,crossAxisAlignment: CrossAxisAlignment.start,));
-  }
-
-  @override
-  Widget buildBotImageMessge(BuildContext context) =>null;
-
-  @override
-  Widget buildBotTextMessge(BuildContext context) =>null;
-
-  @override
-  Widget buildUsrTextMessge(BuildContext context)=>null;
-
-}
-
-class UserTextMessage implements ListItem{
-  final String message;
-  final String timeofday;
-  UserTextMessage({this.message,this.timeofday});
-  @override
-  Widget buildBotButtonMessge(BuildContext context)=>null;
-
-  @override
-  Widget buildBotImageMessge(BuildContext context) => null;
-
-  @override
-  Widget buildBotTextMessge(BuildContext context) => null;
-
-  @override
-  Widget buildUsrTextMessge(BuildContext context) {
-    return new Container(
-      margin: const EdgeInsets.symmetric(vertical: 10.0),
-        child: new Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: <Widget>[
-            new Container(
-              padding: const EdgeInsets.only(left: 10,right: 20,top: 10,bottom: 10),
-              child: new Text(message,style: TextStyle(color: Colors.white),),
-               decoration: BoxDecoration(
-                   border: Border.all(color: Colors.blue),
-                   borderRadius: BorderRadius.circular(20),
-                   color:   Colors.blue
-            ),
-            ),
-            new Container(margin:const EdgeInsets.only(right: 4,top:5),child:Text(timeofday,style: TextStyle(fontSize: 11),))
-          ],
-        ),
-    );
-  }
-
-}
-class BotTextMessage implements ListItem {
-  BotTextMessage({this.text, this.name,this.timeofday});
-
-  final String text;
-  final String name;
-  final String timeofday;
-  
-  @override
-  Widget buildBotButtonMessge(BuildContext context) =>null;
-
-  @override
-  Widget buildBotImageMessge(BuildContext context) =>null;
-
-  @override
-  Widget buildBotTextMessge(BuildContext context) {
-    return new Container(
-      margin: const EdgeInsets.symmetric(vertical: 10.0),
-      child: new Row(children:[
-    new Container(
-        margin: const EdgeInsets.only(right: 10.0),
-        child: new CircleAvatar(radius: 20,backgroundImage: AssetImage('assets/bot.png'))
-      ),
-      new Expanded(
-        child: new Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            new Container(
-              padding: const EdgeInsets.all(10),
-              child: new Text(text),
-               decoration: BoxDecoration(
-                   border: Border.all(color: Colors.grey),
-                   borderRadius: BorderRadius.circular(10),
-                   color: Color.fromRGBO(220, 220, 220, 1)
-            ),
-            ),
-            new Container(margin:const EdgeInsets.only(left: 2,top:5),child:Text(timeofday,style: TextStyle(fontSize: 11),))
-          ],
-        ),
-      ),
-    ])
-    );
-  }
-
-  @override
-  Widget buildUsrTextMessge(BuildContext context) =>null;
 }
