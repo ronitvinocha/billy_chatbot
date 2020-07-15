@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-class MessagesTypes extends StatelessWidget{
+import 'package:url_launcher/url_launcher.dart';
+class MessagesTypes {
 
   Widget buildBotButtonMessge(BuildContext context,List<dynamic> buttonstext, void Function(String text,bool removelastitem) handleSubmitted) {
         var buttonWidget = List<Widget>();
@@ -45,7 +46,8 @@ class MessagesTypes extends StatelessWidget{
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
         clipBehavior: Clip.antiAlias,
         margin: const EdgeInsets.only(top: 5.0,bottom: 5,left: 50),
-    child:Column(children:[Image.network(url)],crossAxisAlignment: CrossAxisAlignment.start));
+    child:Column(children:[Image.network(url)],crossAxisAlignment: CrossAxisAlignment.center));
+
   }
 
 
@@ -78,9 +80,41 @@ class MessagesTypes extends StatelessWidget{
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
 
+  Widget buildBotLinkCard(BuildContext context,String title,String timeofday, String linkheading,String linkurl )
+  {
+    return new Container(
+      margin: const EdgeInsets.symmetric(vertical: 10.0),
+      child: new Row(children:[
+         new Container(
+        margin: const EdgeInsets.only(right: 10.0),
+        child: new CircleAvatar(radius: 20,backgroundImage: AssetImage('assets/bot.png'))
+      ),
+      new Expanded(
+        child:new Column(crossAxisAlignment: CrossAxisAlignment.start,
+          children: [new Container(
+            width: 250,
+       decoration: BoxDecoration(
+                   border: Border.all(color: Colors.grey),
+                   borderRadius: BorderRadius.circular(10)),
+        padding: const EdgeInsets.all(10),
+        child: new Column(children: [
+                new Text(title,style: TextStyle(fontSize: 15),),
+                SizedBox(height: 10,),
+                new Divider(height: 1.0,color: Colors.black12,),
+                SizedBox(height: 10,),
+                new InkWell(
+                     child: new Text(linkheading,textAlign:TextAlign.center,style: TextStyle(color: Colors.blue,fontSize: 18),),
+                     onTap: () => launch(linkurl))],
+
+        )
+      ),
+          new Container(margin:const EdgeInsets.only(left: 2,top:5),child:Text(timeofday,style: TextStyle(fontSize: 11),))
+        ],)
+
+    )
+    ])
+    );
   }
 
 }

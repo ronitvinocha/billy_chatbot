@@ -104,6 +104,51 @@ class _HomePageDialogflow extends State<HomePageDialogflow> {
             _messages.insert(3,botmessage2);
 
       }
+    else if(response.queryResult.intent.displayName.compareTo("response_maybe")==0)
+      {
+        debugPrint(response.getListMessage().toString());
+        List<dynamic> buttons=response.getListMessage()[1]['payload']["buttons"];
+            Widget botbuttons=messagesTypes.buildBotButtonMessge(context, buttons, _handleSubmitted);
+            _messages.insert(0, botbuttons);
+        String url=response.getListMessage()[1]['payload']['images'][0];
+        Widget linkcardmessage=messagesTypes.buildBotLinkCard(context, response.getListMessage()[1]['payload']['LinkCard']['title'], dateFormat, response.getListMessage()[1]['payload']['LinkCard']['linkheading'], response.getListMessage()[1]['payload']['LinkCard']['url']);
+        _messages.insert(1, linkcardmessage);
+        Widget imagemessage=messagesTypes.buildBotImageMessge(context, url);
+            _messages.insert(2, imagemessage);
+      }
+    else if(response.queryResult.intent.displayName.compareTo("response_yes")==0)
+      {
+        List<dynamic> buttons=response.getListMessage()[1]['payload']["buttons"];
+        Widget botbuttons=messagesTypes.buildBotButtonMessge(context, buttons, _handleSubmitted);
+        _messages.insert(0, botbuttons);
+        Widget botmessage=messagesTypes.buildBotTextMessge(context, response.getListMessage()[3]['text']['text'][0], dateFormat);
+        _messages.insert(1,botmessage);
+        Widget botmessage2=messagesTypes.buildBotTextMessge(context, response.getListMessage()[2]['text']['text'][0], dateFormat);
+        _messages.insert(2,botmessage2);
+         String url=response.getListMessage()[1]['payload']['images'][0];
+        Widget imagemessage=messagesTypes.buildBotImageMessge(context, url);
+            _messages.insert(3, imagemessage);
+        Widget botmessage3=messagesTypes.buildBotTextMessge(context, response.getListMessage()[0]['text']['text'][0], dateFormat);
+        _messages.insert(4,botmessage3);
+      }
+    else if(response.queryResult.intent.displayName.compareTo("response_intrested")==0)
+      {
+        Widget botmessage=messagesTypes.buildBotTextMessge(context, response.getListMessage()[1]['text']['text'][0], dateFormat);
+        _messages.insert(0,botmessage);
+        Widget botmessage2=messagesTypes.buildBotTextMessge(context, response.getListMessage()[0]['text']['text'][0], dateFormat);
+        _messages.insert(1,botmessage2);
+      }
+    else if(response.queryResult.intent.displayName.compareTo("response_intrested_yes")==0)
+      {
+         String url=response.getListMessage()[2]['payload']['images'][0];
+        Widget imagemessage=messagesTypes.buildBotImageMessge(context, url);
+            _messages.insert(0, imagemessage);
+        Widget botmessage=messagesTypes.buildBotTextMessge(context, response.getListMessage()[1]['text']['text'][0], dateFormat);
+        _messages.insert(1,botmessage);
+        Widget botmessage2=messagesTypes.buildBotTextMessge(context, response.getListMessage()[0]['text']['text'][0], dateFormat);
+        _messages.insert(2,botmessage2);
+
+      }
     else
       {
           Widget botmessage=messagesTypes.buildBotTextMessge(context, response.getMessage(), dateFormat);
