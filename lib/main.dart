@@ -1,10 +1,10 @@
-import 'dart:convert';
 
+
+import 'package:billy_chatbot/Messages_types.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dialogflow/dialogflow_v2.dart';
 import 'package:intl/intl.dart';
 
-import 'messagestypes.dart';
 
 void main() => runApp(new MyApp());
 
@@ -29,9 +29,9 @@ class HomePageDialogflow extends StatefulWidget {
 }
 
 class _HomePageDialogflow extends State<HomePageDialogflow> {
-  final List<ListItem> _messages = <ListItem>[];
+  final List<Widget> _messages = <Widget>[];
   final TextEditingController _textController = new TextEditingController();
-  ScrollController _scrollController = new ScrollController();
+  MessagesTypes messagesTypes=MessagesTypes();
   @override
   void initState() {
     super.initState();
@@ -47,7 +47,7 @@ class _HomePageDialogflow extends State<HomePageDialogflow> {
             new Flexible(
               child: new TextField(
                 controller: _textController,
-                onSubmitted: _handleSubmitted,
+                onSubmitted: handlesubmit,
                 decoration:
                     new InputDecoration.collapsed(hintText: "Send a message"),
               ),
@@ -56,14 +56,17 @@ class _HomePageDialogflow extends State<HomePageDialogflow> {
               margin: new EdgeInsets.symmetric(horizontal: 4.0),
               child: new IconButton(
                   icon: new Icon(Icons.send),
-                  onPressed: () => _handleSubmitted(_textController.text)),
+                  onPressed: () => _handleSubmitted(_textController.text,false)),
             ),
           ],
         ),
       ),
     );
   }
-
+  void handlesubmit(String text)
+  {
+    _handleSubmitted(text, false);
+  }
   void Response(query) async {
     _textController.clear();
     AuthGoogle authGoogle =
@@ -79,67 +82,49 @@ class _HomePageDialogflow extends State<HomePageDialogflow> {
       {
          if(response.getListMessage()[1]['payload']["buttons"]!=null){
            List<dynamic> buttons=response.getListMessage()[1]['payload']["buttons"];
-           BotButtons chatButtons=new BotButtons(buttons,_handleSubmitted);
+//           BotButtons chatButtons=new BotButtons(buttons,_handleSubmitted);
+           Widget chatButtons=messagesTypes.buildBotButtonMessge(context, buttons,_handleSubmitted);
            _messages.insert(0,chatButtons);
           }
-        BotTextMessage message = new BotTextMessage(
-            text: response.getMessage() ,
-            name: "Bot",
-            timeofday: dateFormat
-           );
-            _messages.insert(1, message);
+          Widget botmessage=messagesTypes.buildBotTextMessge(context, response.getMessage(), dateFormat);
+            _messages.insert(1, botmessage);
 
       }
     else if(response.queryResult.intent.displayName.compareTo("Who is Billy?")==0)
       {
          List<dynamic> buttons=response.getListMessage()[2]['payload']["buttons"];
-           BotButtons chatButtons=new BotButtons(buttons,_handleSubmitted);
+          Widget chatButtons=messagesTypes.buildBotButtonMessge(context, buttons,_handleSubmitted);
            _messages.insert(0,chatButtons);
-          BotTextMessage message2 = new BotTextMessage(
-            text: response.getListMessage()[1]['text']['text'][0] ,
-            name: "Bot",
-            timeofday: dateFormat
-           );
-            _messages.insert(1,message2);
+           Widget botmessage=messagesTypes.buildBotTextMessge(context, response.getListMessage()[1]['text']['text'][0], dateFormat);
+            _messages.insert(1,botmessage);
             String url=response.getListMessage()[2]['payload']['images'][0];
-            BotImageMessage imageMessage=new BotImageMessage(url:url);
-            _messages.insert(2, imageMessage);
-          BotTextMessage message = new BotTextMessage(
-            text: response.getListMessage()[0]['text']['text'][0] ,
-            name: "Bot",
-            timeofday: dateFormat
-           );
-            _messages.insert(3,message);
+           Widget imagemessage=messagesTypes.buildBotImageMessge(context, url);
+            _messages.insert(2, imagemessage);
+           Widget botmessage2=messagesTypes.buildBotTextMessge(context, response.getListMessage()[0]['text']['text'][0], dateFormat);
+            _messages.insert(3,botmessage2);
 
       }
     else
       {
-         BotTextMessage message = new BotTextMessage(
-            text: response.getMessage() ,
-            name: "Bot",
-            timeofday: dateFormat
-           );
-         _messages.insert(0,message);
+          Widget botmessage=messagesTypes.buildBotTextMessge(context, response.getMessage(), dateFormat);
+         _messages.insert(0,botmessage);
       }
     setState(() {
       _messages;
     });
   }
 
-  void _handleSubmitted(String text) {
+  void _handleSubmitted(String text ,bool removelastitem) {
     _textController.clear();
     DateTime date = DateTime.now();
     String dateFormat = DateFormat('E hh:mm').format(date);
-    UserTextMessage message = new UserTextMessage(
-      message: text,
-      timeofday:dateFormat
-    );
-    if(_messages[0] is BotButtons)
+    Widget usermessage=messagesTypes.buildUsrTextMessge(context, text, dateFormat);
+    if(removelastitem)
       {
         _messages.removeAt(0);
       }
     setState(() {
-      _messages.insert(0,message);
+      _messages.insert(0,usermessage);
     });
     Response(text);
   }
@@ -169,19 +154,7 @@ class _HomePageDialogflow extends State<HomePageDialogflow> {
           padding: new EdgeInsets.all(8.0),
           reverse: true,
           itemBuilder: (context, index) {
-            if(_messages[index].buildBotButtonMessge(context)!=null)
-              {
-                return _messages[index].buildBotButtonMessge(context);
-              }
-            else if(_messages[index].buildBotImageMessge(context)!=null){
-               return _messages[index].buildBotImageMessge(context);
-            }
-            else if(_messages[index].buildBotTextMessge(context)!=null){
-               return _messages[index].buildBotTextMessge(context);
-            }
-            else {
-                return _messages[index].buildUsrTextMessge(context);
-            }
+            return _messages[index];
           },
           itemCount: _messages.length,
         )),
