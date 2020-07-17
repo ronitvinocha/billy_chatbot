@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1030020195306",
+    "firebase_url": "https://billy-chat-bot.firebaseio.com",
+    "project_id": "billy-chat-bot",
+    "storage_bucket": "billy-chat-bot.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1030020195306:android:fd708437646474c9950893",
+        "android_client_info": {
+          "package_name": "com.example.billy_chatbot"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1030020195306-sgamp72gr22895bsf2chcmo2cmqohqun.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.billy_chatbot",
+            "certificate_hash": "ef61dfe14835b14301597c8773f438f6c7d0b02b"
+          }
+        },
+        {
+          "client_id": "1030020195306-18b13ad920tgmfe1baq8bo38003iuot2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCgIaY89NHx8_MwwVrU1PtzscOcAeCuAns"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1030020195306-18b13ad920tgmfe1baq8bo38003iuot2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

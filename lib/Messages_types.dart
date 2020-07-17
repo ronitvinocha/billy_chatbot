@@ -116,5 +116,18 @@ class MessagesTypes {
     ])
     );
   }
+    Widget buildPostsMessage(BuildContext context,List<dynamic> imageurllist)
+  {
+    return new Container(
+      margin: const EdgeInsets.symmetric(vertical: 10.0),
+      height: 200,
+      child:new ListView.builder(
+      scrollDirection: Axis.horizontal,
+      itemBuilder: (context, index) {
+            return Image.network(imageurllist[index]);
+          },
+    itemCount: imageurllist.length,
+    ));
+  }
 
 }
