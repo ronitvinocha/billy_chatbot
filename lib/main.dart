@@ -284,6 +284,12 @@ class _HomePageDialogflow extends State<HomePageDialogflow> {
        Widget postmessage=messagesTypes.buildPostsMessage(context,imageurllist);
        _messages.insert(0, postmessage);
     }
+    else
+      {
+         Widget botmessage=messagesTypes.buildBotTextMessge(context, response.getMessage(), dateFormat);
+        _messages.insert(0,botmessage);
+         pushtextmessagetodatabase(response.getMessage(), dateFormat, "bottextmessage");
+      }
     setState(() {
       _messages;
     });
