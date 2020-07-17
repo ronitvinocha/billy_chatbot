@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dialogflow/dialogflow_v2.dart';
 import 'package:intl/intl.dart';
 import 'package:device_info/device_info.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 
 void main() => runApp(new MyApp());
@@ -13,7 +14,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return new MaterialApp(
-      title: 'Example Dialogflow Flutter',
+      title: 'Billy-Chatbot',
       debugShowCheckedModeBanner: false,
       home: new HomePageDialogflow(),
     );
@@ -32,15 +33,26 @@ class HomePageDialogflow extends StatefulWidget {
 
 class _HomePageDialogflow extends State<HomePageDialogflow> {
   List<Widget> _messages = <Widget>[];
+  bool showloader=true;
   final TextEditingController _textController = new TextEditingController();
   int count=0;
   var dbRef;
   MessagesTypes messagesTypes=MessagesTypes();
+
+
   @override
   void initState() {
     super.initState();
-    _getId().then((value) {
-       dbRef=FirebaseDatabase.instance.reference().child(value);
+    _getId().then((value)  {
+       getmessagesfromdatabase(value);
+    });
+  }
+
+
+  // getting messages from firebase realtime database on init distinctive by device id
+  void getmessagesfromdatabase(String value)
+  {
+    dbRef=FirebaseDatabase.instance.reference().child(value);
        List<dynamic> messagelist=<dynamic>[];
        dbRef.once().then((DataSnapshot snapshot) {
           Map<dynamic, dynamic> messages = snapshot.value;
@@ -89,17 +101,20 @@ class _HomePageDialogflow extends State<HomePageDialogflow> {
               });
              setState(() {
                _messages=new List.from(_messages.reversed);
+               showloader=false;
              });
            }
           else
             {
               Response("Hi");
+              setState(() {
+                showloader=false;
+              });
             }
        });
-    });
-//
   }
 
+  //Textfield to type user's message
   Widget _buildTextComposer() {
     return new IconTheme(
       data: new IconThemeData(color: Theme.of(context).accentColor),
@@ -126,10 +141,45 @@ class _HomePageDialogflow extends State<HomePageDialogflow> {
       ),
     );
   }
+
+  //list to show messages
+  Widget _listofmessages()
+  {
+    return new Column(children: <Widget>[
+        new Flexible(
+            child: new ListView.builder(
+          padding: new EdgeInsets.all(8.0),
+          reverse: true,
+          itemBuilder: (context, index) {
+            return _messages[index];
+          },
+          itemCount: _messages.length,
+        )),
+        new Divider(height: 1.0),
+        new Container(
+          decoration: new BoxDecoration(color: Theme.of(context).cardColor),
+          child: _buildTextComposer(),
+        ),
+      ]);
+  }
+
+  //basic loader
+  Widget _loader()
+  {
+    return Center(
+            child: SpinKitDualRing(
+              color: Colors.blue,
+              size: 30,
+            ));
+  }
+
+  //handling submit when pressed enter from keyboard
   void handlesubmit(String text)
   {
     _handleSubmitted(text, false);
   }
+
+  //handling multiple type of response from bot
   void Response(query) async {
     _textController.clear();
     AuthGoogle authGoogle =
@@ -229,13 +279,17 @@ class _HomePageDialogflow extends State<HomePageDialogflow> {
     else if(response.queryResult.intent.displayName.compareTo("get_posts")==0)
     {
        debugPrint(response.getListMessage().toString());
-       Widget postmessage=messagesTypes.buildPostsMessage(context, response.getListMessage()[0]["text"]['text']);
+       List<dynamic> imageurllist=response.getListMessage()[0]["text"]["text"];
+       imageurllist=new List<dynamic>.from(imageurllist.reversed);
+       Widget postmessage=messagesTypes.buildPostsMessage(context,imageurllist);
        _messages.insert(0, postmessage);
     }
     setState(() {
       _messages;
     });
   }
+
+  //pushing multiple type of message to firebase realtime database
   void pushtextmessagetodatabase(String message,String timeofday,String type)
   {
     dbRef.push().set({
@@ -270,6 +324,8 @@ class _HomePageDialogflow extends State<HomePageDialogflow> {
          debugPrint(onError.toString());
      });
   }
+
+  //handling user message submitting
   void _handleSubmitted(String text ,bool removelastitem) {
     _textController.clear();
     DateTime date = DateTime.now();
@@ -311,22 +367,7 @@ class _HomePageDialogflow extends State<HomePageDialogflow> {
             ),
           ),
         ),
-      body: new Column(children: <Widget>[
-        new Flexible(
-            child: new ListView.builder(
-          padding: new EdgeInsets.all(8.0),
-          reverse: true,
-          itemBuilder: (context, index) {
-            return _messages[index];
-          },
-          itemCount: _messages.length,
-        )),
-        new Divider(height: 1.0),
-        new Container(
-          decoration: new BoxDecoration(color: Theme.of(context).cardColor),
-          child: _buildTextComposer(),
-        ),
-      ]),
-    );
+      body:showloader?_loader():_listofmessages()
+      );
   }
 }
